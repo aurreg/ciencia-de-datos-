@@ -1,0 +1,300 @@
+---
+title: "Analisis Descriptivo Univariado"
+format: html
+editor: visual
+---
+
+```{r}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(FactoClass)
+library(plotly)
+library(knitr)
+library(htmlwidgets)
+```
+
+# Introducción
+
+La atención a pacientes en estado crítico representa uno de los mayores desafíos en la medicina, especialmente cuando se trata de enfermedades que potencialmente son mortales. Comprender las tasas de supervivencia a corto y mediano plazo en pacientes hospitalizados en unidades de cuidados intensivos (UCI), y las características socio demográficas y fisiológicas que pueden apaciguar/atenuar el avance de estas ensfermedades, permite plantear estrategias que busquen disminuir las tasas de mortalidad en este tipo de pacientes.
+
+# Descripción de datos
+
+El estudio cuenta con 9105 individuos ingresados a hospitales de 5 centros médicos de Estados Unidos entre 1989 y 1994, a los cuales les fueron medidas 45 variables socio-demográficas, fisiológicas y relacionadas a su estancia en el hospital.
+
+Los individuos de estudio corresponden a personas con al menos una de 9 enfermedades graves o potencialmente mortales, véase insuficiencia respiratoria aguda, enfermedad pulmonar obstructiva crónica, insuficiencia cardíaca congestiva, enfermedad hepática, coma, cáncer de colon, cáncer de pulmón, insuficiencia multiorgánica con malignidad e insuficiencia multiorgánica con sepsis, y a los que les fue estimado un índice de supervivencia una vez pasados 2 y 6 meses fuera del hospital.
+
+El conjunto de datos proviene del experimento **SUPPORT**, donde se evaluaba el efecto de la toma de decisiones y pronósticos para personas con enfermedades graves buscando evitar el sufrimiento al final de la vida.
+
+# Población de estudio
+
+La población objetivo del estudio corresponde a los pacientes graves de alguna de las 9 enfermedades estudiadas dentro de los cinco centros médicos en cuestión, ingresados entre 1989 y 1994.
+
+```{r}
+datos <- read_excel("SUPPPORT2.xlsx")
+head(datos)
+```
+
+# Diccionario de datos
+
+-   Age: Edad
+
+-   Death: Momento de la muerte
+
+-   Sex: Sexo
+
+-   hospdead: Si muere en el hospital.
+
+-   Slos: Días desde ingreso hasta alta.
+
+-   d.time: Días de seguimiento.
+
+-   dzgroup: Subcategoría enfermedad del paciente.
+
+-   dzclass: Categoría enfermedad del paciante.
+
+-   num.co: Número de enfermedades o comorbilidades simultáneas.
+
+-   edu: Años de educación.
+
+-   income: Ingreso del paciente.
+
+-   scoma: score de soporte de coma.
+
+-   charges: Cargos de hospital.
+
+-   totcst: Costo total.
+
+-   totmcst: Micro costo total.
+
+-   avtisst: Puntuación promedio de TISS.
+
+-   race: Raza del paciente.
+
+-   sps: Score de soporte psicológico.
+
+-   aps: Puntuación de fisiología.
+
+-   surv2m: Estimación de supervivencia a los 2 meses.
+
+-   surv6m: Estimación de supervivencia a los 6 meses.
+
+-   hday: Día en que entra al hospital.
+
+-   diabetes: Si el paciente tiene diabetes.
+
+-   dementia: Si el paciente tiene demencia.
+
+-   ca: Si el paciente tiene cáncer.
+
+-   prg2m: Estimación del médico para supervivencia a 2 meses.
+
+-   prg6m: Estimación del médico para supervivencia a 6 meses.
+
+-   dnr: Si el paciente ha tenido orden de resucitación.
+
+-   dnrday: Día de la orden de resucitación.
+
+-   meanbp: Presión arterial.
+
+-   wblc: Conteo de glóbulos blancos.
+
+-   hrt: Frecuencia cardiaca.
+
+-   resp: Frecuencia respiratoria.
+
+-   temp: Temperatura del paciente.
+
+-   pafi: Relación de presión de oxígeno arterial y fracción de oxigeno inspirado.
+
+-   alb: Nivel de albumina sérica.
+
+-   bili: Niveles de bilirrubina.
+
+-   crea: Niveles de creatinina.
+
+-   sod: COncentración de sodio.
+
+-   ph: pH de la presión arterial.
+
+-   glucosa: Nivel de glucosa.
+
+-   bun: Niveles de nitrógeno uréico.
+
+-   urine: Producción de orina.
+
+-   adlp: Índice de actividad diaria.
+
+-   adls: Índice de actividad diaria hecha por un sustituto.
+
+-   sfdm2: Nivel de discapacidad funcional.
+
+-   adlsc: ADL impuitado calibrado al sustituto.
+
+```{r}
+nombres <- c("edad","sexo","SubEnf","Enf","EnfSimul","Edu","ingreso","coma","CargosHosp","CostTot","MicroTot","PuntTISS","Raza","SopPsic","SopFisio","Sup2m","Sup6m","DiaIng","diabetes","demencia","cancer","SupEst2m","SupEst6m","Resu","DiaResu","PresArt","GlobBlanc","FrecCard","FrecResp","temperatura","OxArt-OxInsp","albumina","bilirrubina","creatinina","sodio","pH","glucosa","NitrUreico","ProdOrina","IndActDiaria","IndSust","ADL","Muerte","MuerteHosp","DiscFunc")
+
+colnames(datos) <- nombres
+```
+
+```{r}
+categoricas <- datos[,c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)]
+categoricas <- as.data.frame(lapply(categoricas,as.factor))
+numericas <- datos[,-c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)]
+numericas <- as.data.frame(lapply(numericas, as.numeric))
+
+categoricas1 <- c(2,3,4,5,7,13,19,20,21)
+categoricas2 <- c(24,40,41,43,44,45)
+
+numericas1 <- seq(1,6)
+numericas2 <- seq(7,12)
+numericas3 <- seq(13,18)
+numericas4 <- seq(19,24)
+numericas5 <- seq(25,30)
+
+colores <- rep(c("red","blue","yellow","pink","green","orange"),5)
+```
+
+Se cuenta con 15 variables categóricas y 30 variables numéricas, aunque algunas variables como edad, que en el conjunto de datos se encuentra medida en escala continua se podría categorizar. Mismo caso para variables como años de educación.
+
+# Análisis variables categóricas
+
+```{r}
+for (i in categoricas1) {
+  col_data <- as.factor(datos[[i]])  # Asegurarse de que sea un factor
+  freqs <- table(col_data)
+  percs <- round(prop.table(freqs) * 100, 1)
+
+  # Crear gráfico de barras
+  barplot(
+    freqs,
+    horiz = TRUE,
+    col = rainbow(length(freqs)),
+    main = colnames(datos)[i],  # Usa el nombre directamente
+    xlab = "Frecuencia",
+    cex.main = 1,  # Reducir el tamaño del título
+    cex.lab = 1,  # Reducir el tamaño de etiquetas
+    cex.axis = 1,
+    las = 1  # Rotar las etiquetas del eje vertical
+  )
+
+  # Agregar porcentajes como etiquetas
+  text(freqs, seq_along(freqs), labels = paste0(percs, "%"), pos = 4, cex = 0.7, col = "black")
+}
+```
+
+```{r}
+par(mfrow = c(3, 2), mai = c(0.6, 1, 0.4, 0.1))  # Márgenes más amplios a la izquierda
+for (i in categoricas2) {
+  col_data <- as.factor(datos[[i]])  # Asegurarse de que sea un factor
+  freqs <- table(col_data)
+  percs <- round(prop.table(freqs) * 100, 1)
+
+  # Crear gráfico de barras
+  barplot(
+    freqs,
+    horiz = TRUE,
+    col = rainbow(length(freqs)),
+    main = colnames(datos)[i],  # Usa el nombre directamente
+    xlab = "Frecuencia",
+    cex.main = 1,  # Reducir el tamaño del título
+    cex.lab = 1,  # Reducir el tamaño de etiquetas
+    cex.axis = 0.8,
+    las = 1  # Rotar las etiquetas del eje vertical
+  )
+
+  # Agregar porcentajes como etiquetas
+  text(freqs, seq_along(freqs), labels = paste0(percs, "%"), pos = 4, cex = 0.7, col = "black")
+}
+```
+
+Se puede observar que la categoría y subcategoría de enfermedad que más se repite es falla renal aguda y falla multiorgánica. Además, la mayoría de los pacientes del estudio fallecieron, pero un mayor número fuera del hospital.
+
+Adicionalmente, la mayoría de los pacientes no presentaban enfermedades como diabetes, demencia o cáncer.
+
+```{r}
+par(mfrow=c(2,3), mai=c(0.3,0.4,0.3,0.1), las=1, bty="n")
+for(i in numericas1) hist(numericas[,i], main=names(numericas)[i], col=colores[i])
+```
+
+```{r}
+par(mfrow=c(2,3), mai=c(0.3,0.4,0.3,0.1), las=1, bty="n")
+for(i in numericas2) hist(numericas[,i], main=names(numericas)[i], col=colores[i])
+```
+
+```{r}
+
+par(mfrow=c(2,3), mai=c(0.3,0.4,0.3,0.1), las=1, bty="n")
+for(i in numericas3) hist(numericas[,i], main=names(numericas)[i], col=colores[i])
+
+```
+
+```{r}
+par(mfrow=c(2,3), mai=c(0.3,0.4,0.3,0.1), las=1, bty="n")
+for(i in numericas4) hist(numericas[,i], main=names(numericas)[i], col=colores[i])
+
+```
+
+```{r}
+par(mfrow=c(2,3), mai=c(0.3,0.4,0.3,0.1), las=1, bty="n")
+for(i in numericas5) hist(numericas[,i], main=names(numericas)[i], col=colores[i])
+
+```
+
+Se observa que la edad de los pacientes de estudio se sitúa en promedio alrededor de 60 años. Además, la mayoría de distribuciones se concentran hacia la izquierda, lo que en la mayoría de casos se interpreta como condiciones "anormales" o graves de salud.
+
+```{r}
+par(mfrow=c(2,3), mai=c(0.3,0.4,0.3,0.1), las=1, bty="n")
+for(i in numericas1) boxplot(numericas[,i], main=names(numericas)[i], col= colores[i])
+```
+
+```{r}
+par(mfrow=c(2,3), mai=c(0.3,0.4,0.3,0.1), las=1, bty="n")
+for(i in numericas2) boxplot(numericas[,i], main=names(numericas)[i], col=colores[i])
+```
+
+```{r}
+par(mfrow=c(2,3), mai=c(0.3,0.4,0.3,0.1), las=1, bty="n")
+for(i in numericas3) boxplot(numericas[,i], main=names(numericas)[i], col=colores[i])
+```
+
+```{r}
+par(mfrow=c(2,3), mai=c(0.3,0.4,0.3,0.1), las=1, bty="n")
+for(i in numericas4) boxplot(numericas[,i], main=names(numericas)[i], col=colores[i])
+```
+
+```{r}
+par(mfrow=c(2,3), mai=c(0.3,0.4,0.3,0.1), las=1, bty="n")
+for(i in numericas5) boxplot(numericas[,i], main=names(numericas)[i], col=colores[i])
+```
+
+Para la mayoría de variables numéricas se presenta una gran cantidad de datos atípicos, lo que se traduce como una gran cantidad de pacientes que ingresan en condiciones muy graves, y costos hospitalarios muy elevados en algunos casos, probablemente por parte de los mismos pacientes.
+
+```{r}
+datos_faltantes <- function(x){
+  r <- sum(is.na(x))
+  return(r)
+}
+table(apply(datos,2,datos_faltantes))
+```
+
+```{r}
+resultado <- data.frame(Variable = names(datos), Faltantes = sapply(datos, datos_faltantes))
+resultado
+```
+
+Algunas variables cuentan con muchos datos faltantes, en especial las relacionadas con mediciones de componentes en la sangre, o variables relacionadas con actividades luego de la salida del hospital (probablemente por parte de los pacientes que fallecieron allí).
+
+Para el caso del ingreso, que también cuenta con muchos datos faltantes, se puede llegar a considerar una categorización tomando el dato faltante como una categoría, o extraer a dichos individuos del estudio.
+
+# Posibles Análisis estadísticos
+
+-   Aprendizaje no supervisado:
+
+Se plantea implementar modelos de aprendizaje no supervisado para explorar relaciones y agrupaciones de individuos y variables, como pueden ser por ejemplo que las personas con mayor nivel de ingresos tiendan tener mayores gastos hospitalarios y tengan mas probabilidades de sobrevivir, o que se asocien algunas condiciones como niveles de componentes en la sangre, diabetes, glucosa y demás a ciertas enfermedades particularmente.
+
+-   Aprendizaje supervisado:
+
+Se plantea implementar modelos que permitan predecir los valores de alguna variable en base a la información disponible. El ejemplo más lógico sería tomar como variable de respuesta la muerte o supervivencia del paciente, e implementar un modelo de clasificación que permita determinar si un paciente sobrevivirá en base a características como el número de comorbilidades simultáneas que posee, niveles de componentes en sangre, costos hospitalarios, edad, etc.
+
+También se podrían plantear modelos tomando la variable de muerte en el hospital como respuesta, para separar a los individuos que sobrevivieron dentro del hospital de los que no, y analizar a estos individuos por separado.
