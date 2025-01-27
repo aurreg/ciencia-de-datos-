@@ -1,0 +1,487 @@
+---
+title: "Analisis Descriptivo Multivariado"
+format: html
+editor: visual
+---
+
+
+# Procesamiento de variables
+
+
+```{r}
+# cambia idioma de la consola de R a español:
+Sys.setenv(LANG="es")
+# usar 2 cifras significativas y tiende a evitar 
+# notación científica (ver ayuda de función: `options`): 
+options(digits = 2, scipen = 999) 
+# cargar librerías: 
+# Cargar librerías y suprimir mensajes y advertencias individualmente
+suppressMessages(suppressWarnings(library(FactoClass)))
+suppressMessages(suppressWarnings(library(Factoshiny)))
+suppressMessages(suppressWarnings(library(factoextra)))
+suppressMessages(suppressWarnings(library(plotly)))
+suppressMessages(suppressWarnings(library(dplyr)))
+suppressMessages(suppressWarnings(library(readxl)))
+suppressMessages(suppressWarnings(library(ggplot2)))
+suppressMessages(suppressWarnings(library(knitr)))
+suppressMessages(suppressWarnings(library(htmlwidgets)))
+suppressMessages(suppressWarnings(library(ggpubr)))
+```
+
+```{r}
+
+
+datos <- read_excel("SUPPPORT2.xlsx")
+datos<-datos%>%mutate(num.co=case_when(num.co>=4~ '4+',
+                                       TRUE ~ as.character(num.co)
+))
+datos[,c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)]<-lapply(datos[,c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)],as.factor)
+datos
+```
+
+
+**Sex**
+
+La variable Sex no parece nesesitar ninguna recategorizacion.
+
+Nuevos Niveles:
+
+female : f
+
+male : m
+
+**dzgroup: Subcategoría enfermedad del paciente.**
+
+Nuevos Niveles:
+
+Lung Cancer = L.C
+
+Cirrhosis = C
+
+ARF/MOSF w/ Sepsis = A.M.S
+
+Coma = Coma
+
+CHF = CHF
+
+Colon Cancer = C.C
+
+COPD = COPD
+
+MOSF w/Malig = M.M
+
+**dzclass:Categoría enfermedad del paciante.**
+
+Nuevos Niveles:
+
+ARF/MOSF = A.M
+
+Cancer= C
+
+Coma = Coma
+
+COPD/CHF/Cirrhosis = C.C.C
+
+**race**
+
+Hay muy pocos asiaticos, negros, hispanos y otros por lo que se binzariza la variable en blancos y otros
+
+nuevos nivels
+
+white=w
+
+other=o
+
+### 
+
+
+```{r}
+
+datos<-datos%>%mutate(dzgroup=case_when(dzgroup=="Lung Cancer"~ 'L.C',
+                                        dzgroup=="Cirrhosis"~ 'C',
+                                        dzgroup=="ARF/MOSF w/Sepsis"~ 'A.M.S',
+                                        dzgroup=="Coma"~ 'Coma',
+                                        dzgroup=="CHF"~ 'CHF',
+                                        dzgroup=="Colon Cancer"~ 'C.C',
+                                        dzgroup=="COPD"~ 'COPD',
+                                        dzgroup=="MOSF w/Malig"~ 'M.M',
+                                        T~'NA'
+))
+
+datos<-datos%>%mutate(dzclass=case_when(dzclass=="ARF/MOSF"~ 'A.M',
+                                       dzclass=="Cancer"~ 'C',
+                                       dzclass=="Coma"~ 'Coma',
+                                       T~'C.C.C'
+))
+datos<-datos%>%mutate(race=case_when(race=="white"~ 'W',
+                                     
+                                     T~'O'
+))
+
+datos<-datos%>%mutate(dementia=case_when(dementia==1~ 'yes',
+                                         
+                                         T~'no'
+))
+
+datos<-datos%>%mutate(diabetes=case_when(diabetes==1~ 'yes',
+                                         
+                                         T~'no'
+))
+
+
+
+datos<-datos%>%mutate(dnr=case_when(dnr=='dnr after sadm'~ 'yes',
+                                    dnr=='dnr before sadm'~ 'yes',
+                                         T~'no'
+))
+datos<-datos%>%mutate(death=case_when(death==1~ 'yes',
+                                      
+                                      T~'no'
+))
+
+datos<-datos%>%mutate(hospdead=case_when(hospdead==1~ 'yes',
+                                         
+                                         T~'no'
+))
+datos[,c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)]<-lapply(datos[,c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)],as.factor)
+
+```
+
+
+### ACP
+
+De acuerdo con el análisis exploratorio de los datos, se decide utilizar como variables activas para el ACP aquellas que presenten menos valores faltantes (NA) y menos valores atípicos (outliers). Las variables seleccionadas son: **"age"**, **"avtisst"**, **"surv2m"**, **"surv6m"**, **"meanbp"**, **"hrt"** y **"temp"**.
+
+
+```{r}
+outlier_count <- function(column) {
+  if (is.numeric(column)) { # Verificar si la columna es numérica
+    Q1 <- quantile(column, 0.25, na.rm = TRUE)  # Primer cuartil
+    Q3 <- quantile(column, 0.75, na.rm = TRUE)  # Tercer cuartil
+    IQR <- Q3 - Q1  # Rango intercuartil
+    lower_bound <- Q1 - 1.5 * IQR  # Límite inferior
+    upper_bound <- Q3 + 1.5 * IQR  # Límite superior
+    return(sum(column < lower_bound | column > upper_bound, na.rm = TRUE))
+  } else {
+    return(0)  # Si no es numérico, no hay atípicos
+  }
+}
+```
+
+```{r}
+colores <- rep(c("red","blue","yellow","pink","green","orange"),5)
+par(mfrow=c(2,3), mai=c(0.3,0.4,0.3,0.1), las=1, bty="n")
+for(i in # Encuentra las posiciones de las columnas
+match(c("age", "avtisst", "surv2m", "surv6m", "meanbp", "hrt", "temp"), names(datos))) boxplot(datos[,i], main=names(datos)[i], col=colores[i])
+```
+
+```{r}
+sapply(datos[,-c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)], outlier_count)
+```
+
+```{r}
+res.PCA<-PCA(datos,quali.sup=c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45),quanti.sup=c(6,9,10,11,14,15,18,22,23,25,27,29,31,32,33,34,35,36,37,38,39,42),graph=FALSE)
+
+```
+
+
+Observando el histograma de los valores propios divididos por la inercia total, se decide analizar cuatro ejes, dado que retienen alrededor del 40% de la variabilidad.
+
+
+```{r}
+barplot(res.PCA$eig[,1]/sum(res.PCA$eig[,1]))
+cumsum(res.PCA$eig[,1]/sum(res.PCA$eig[,1]))
+```
+
+
+Las variables que más contribuyen a la construcción del primer eje son los índices de supervivencia Schoma y Avissst. En el segundo eje, las variables principales son la temperatura, la frecuencia cardíaca y la edad. En el tercer eje, predominan la presión arterial y la edad, mientras que en el cuarto eje destacan la edad, la temperatura y la presión arterial.
+
+
+```{r}
+fviz_contrib(res.PCA, choice = "var", axes = 1)
+fviz_contrib(res.PCA, choice = "var", axes = 2)
+fviz_contrib(res.PCA, choice = "var", axes = 3)
+fviz_contrib(res.PCA, choice = "var", axes = 4)
+
+
+
+```
+
+
+Se grafican los círculos de correlaciones correspondientes a tres planos factoriales, incluyendo únicamente las variables ilustrativas y activas con un $cos^2 > 0.2$. Esto se realiza para facilitar la lectura y mejorar la interpretación de los resultados.
+
+
+```{r}
+umbral_cos2 <- 0.2
+
+# Filtrar las variables según su cos2
+variables_filtradas <- rownames(res.PCA$var$cos2)[apply(res.PCA$var$cos2[,c(1,2)], 1, sum) >= umbral_cos2]
+
+# Filtrar las variables según su cos2
+variables_filtradas2 <- rownames(res.PCA$quanti.sup$cos2)[apply(res.PCA$quanti$cos2[,c(1,2)], 1, sum) >= umbral_cos2]
+variables_filtradas<-c(variables_filtradas,variables_filtradas2)
+fviz_pca_var(res.PCA, axes=c(1,2), col.var="cos2",
+             select.var = list(name =variables_filtradas),
+             gradient.cols = c("darkred", 
+                               "darkorange", 
+                               "darkgreen"))
+
+
+```
+
+
+En el primer eje se puede observar una correlación positiva con el índice y la estimación de supervivencia de los pacientes, y una correlación negativa con el score de coma y la puntuación promedio del sistema de calificación de la intervención terapéutica (TISS), que cuantifica la intensidad del tratamiento suministrado al paciente.
+
+El segundo eje presenta una correlación positiva con el TISS, la temperatura y la frecuencia cardíaca, y una correlación negativa con la edad.
+
+
+```{r}
+umbral_cos2 <- 0.2
+
+# Filtrar las variables según su cos2
+variables_filtradas <- rownames(res.PCA$var$cos2)[apply(res.PCA$var$cos2[,c(1,3)], 1, sum) >= umbral_cos2]
+
+# Filtrar las variables según su cos2
+variables_filtradas2 <- rownames(res.PCA$quanti.sup$cos2)[apply(res.PCA$quanti$cos2[,c(1,3)], 1, sum) >= umbral_cos2]
+variables_filtradas<-c(variables_filtradas,variables_filtradas2)
+fviz_pca_var(res.PCA, axes=c(1,3), col.var="cos2",
+             select.var = list(name =variables_filtradas),
+             gradient.cols = c("darkred", 
+                               "darkorange", 
+                               "darkgreen"))
+```
+
+
+En el tercer eje se observa una alta correlación positiva con la presión arterial, mientras que en el cuarto eje se identifica una correlación positiva con la temperatura, la edad y la presión arterial.
+
+
+```{r}
+umbral_cos2 <- 0.2
+
+# Filtrar las variables según su cos2
+variables_filtradas <- rownames(res.PCA$var$cos2)[apply(res.PCA$var$cos2[,c(1,4)], 1, sum) >= umbral_cos2]
+
+# Filtrar las variables según su cos2
+variables_filtradas2 <- rownames(res.PCA$quanti.sup$cos2)[apply(res.PCA$quanti$cos2[,c(1,4)], 1, sum) >= umbral_cos2]
+variables_filtradas<-c(variables_filtradas,variables_filtradas2)
+fviz_pca_var(res.PCA, axes=c(1,4), col.var="cos2",
+             select.var = list(name =variables_filtradas),
+             gradient.cols = c("darkred", 
+                               "darkorange", 
+                               "darkgreen"))
+```
+
+
+Para el gráfico de los promedios de las variables ilustrativas, se seleccionan aquellas que tengan valores test mayores a 3.
+
+
+```{r}
+
+umbral <- 3
+quali.sup <- as.data.frame(res.PCA$quali.sup$coord[apply(abs(res.PCA$quali.sup$v.test[,c(1,2)]), 1, max) >= umbral,])
+quali.sup$name <- rownames(res.PCA$quali.sup$cos2)[apply(abs(res.PCA$quali.sup$v.test[,c(1,2)]), 1, max) >= umbral]
+
+# Plot
+
+ggscatter(quali.sup, x = "Dim.1", y = "Dim.2", label = "name",
+          ylim = c(-2.5, 2.5), xlim = c(-2.5, 2.5),
+          ggtheme = theme_minimal()
+)+
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  geom_hline(yintercept = 0, linetype = "dashed")
+
+```
+
+```{r}
+
+res.PCA$quali.sup$v.test
+```
+
+```{r}
+res.PCA$quali.sup$coord
+```
+
+```{r}
+plot.PCA(res.PCA, axes = c(1,2),label =c('none'),choix = c("ind"))
+plot.PCA(res.PCA, axes = c(1,3),label =c('none'),choix = c("ind"))
+plot.PCA(res.PCA, axes = c(1,4),label =c('none'),choix = c("ind"))
+```
+
+
+### ACM
+
+
+```{r}
+summary(datos[,c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)])
+```
+
+
+Se eligen las variables numéricas como ilustrativas, y las variables sfdm2, dzgroup y los índices de actividad diaria como suplementarias para realizar el ACM.
+
+
+```{r}
+
+library("FactoMineR")
+acm <- MCA(datos,quanti.sup=c(1,6,8,9,10,11,12,14,15,16,17,18,22,23,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,42),quali.sup=c(3,40,41,45),graph=FALSE)
+barplot(acm$eig[,1])
+```
+
+
+Se realiza el diagrama de barras correspondiente a los valores propios más altos y se seleccionan 17 ejes para llevar a cabo el proceso de agrupamiento.
+
+
+```{r}
+s <- 11 # poner el numero de activas que hicieron los planos
+l <- acm$eig[acm$eig[,1] > 1/s, 1]
+tau <- ( s / (s - 1) )^2 * ( l - (1/s) )^2
+ptau <- tau / sum( tau ) * 100
+barplot(ptau, col="darkred", ylim = c(0,75))
+```
+
+
+Al realizar el histograma de Benzecri, se decide analizar 3 ejes.
+
+
+```{r}
+fviz_contrib(acm, choice = "var", axes = 1)
+```
+
+
+Se puede observar que lo que más contribuye al primer eje factorial son: tener metástasis o no tener cáncer, tener cáncer, una comorbilidad (COPD/CHF/Cirrhosis) y no haber muerto a lo largo del estudio.
+
+
+```{r}
+fviz_contrib(acm, choice = "var", axes = 2)
+```
+
+
+En el segundo eje factorial contribuyen: haber muerto en el hospital o no, tener o no una orden de reanimación, y tener cáncer o no.
+
+
+```{r}
+fviz_contrib(acm, choice = "var", axes = 3)
+```
+
+
+En el tercer eje, lo que más contribuye es tener 4 o más comorbilidades o ninguna, tener diabetes, tener COPD/CHF/Cirrhosis, no haber muerto y tener ARF/MOSF.
+
+
+```{r}
+
+# Establecer un umbral mínimo de calidad de representación
+umbral_cos2 <- 0.2
+
+# Filtrar las variables según su cos2
+variables_filtradas <- rownames(acm$var$cos2)[apply(acm$var$cos2[,c(1,2)], 1, sum) >= umbral_cos2]
+
+# Crear un gráfico solo con las variables seleccionadas
+fviz_mca_var(acm, axes = c(1, 2), col.var = "cos2", repel = TRUE, 
+             select.var = list(name = variables_filtradas),
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             ggtheme = theme_minimal())
+
+
+```
+
+
+Las variables más representadas en el primer plano muestran que las personas que murieron en el hospital tenían orden de reanimación. También se observa que las personas con metástasis no presentaban ninguna comorbilidad y no tenían orden de reanimación. Al parecer, las personas con CCC no murieron y parecen tener más comorbilidades. Se puede observar que las personas que murieron se ubican al otro lado de las variables "cáncer" y "metástasis".
+
+
+```{r}
+# Filtrar las variables según su cos2 en los ejes seleccionados (1 y 3)
+umbral_cos2 <- 0.15
+variables_filtradas <- rownames(acm$var$cos2)[apply(acm$var$cos2[,c(1,3)], 1, sum) >= umbral_cos2]
+
+
+# Crear un gráfico solo con las variables seleccionadas
+fviz_mca_var(acm, axes = c(1, 3), col.var = "cos2", repel = TRUE, 
+             select.var = list(name = variables_filtradas),
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             ggtheme = theme_minimal())
+```
+
+
+El segundo plano factorial muestra cómo se separan las personas con varias comorbilidades de las que no tienen. Se puede observar que las personas con más comorbilidades son las que suelen morir más, y que las personas con cáncer y metástasis presentan una comorbilidad.
+
+
+```{r}
+plot.MCA(acm, choix='quanti.sup',title="Supplementary quantitatives variables")
+```
+
+
+En el círculo de correlación se muestra cómo los índices suministrados por los doctores están altamente relacionados con la supervivencia de los pacientes, indicando que, entre más altos sean estos índices, mayor es la probabilidad de que el paciente sobreviva.
+
+
+```{r}
+plot.MCA(acm, axes = c(1, 3),choix='quanti.sup',title="Supplementary quantitatives variables")
+```
+
+```{r}
+fviz_mca_var(acm, axes = c(1,2),
+             choice = "mca.cor", repel = TRUE, 
+             ggtheme = theme_minimal())
+
+```
+
+```{r}
+fviz_mca_var(acm, axes = c(1,3),
+             choice = "mca.cor", repel = TRUE, 
+             ggtheme = theme_minimal())
+
+```
+
+```{r}
+plot.MCA(acm,label ='none')
+```
+
+```{r}
+plot.MCA(acm, axes = c(1,3),label =c('none'))
+```
+
+
+Al observar la nube de individuos, se puede notar que pocos tenían 0 comorbilidades, siendo la mayoría quienes tenían una. Además, se puede ver claramente la separación entre los pacientes con cáncer y/o metástasis y aquellos sin estas condiciones.
+
+
+```{r}
+# poner 1000}
+res.HCPC<-HCPC(acm,nb.clust=3,kk=1000,consol=FALSE,graph=FALSE)
+```
+
+```{r}
+plot.HCPC(res.HCPC,choice='tree',title='Hierarchical tree')
+```
+
+```{r}
+plot.HCPC(res.HCPC,choice='map',draw.tree=FALSE,title='Factor map',ind.names=F,axes=c(1,2))
+plot.HCPC(res.HCPC,choice='map',draw.tree=FALSE,title='Factor map',ind.names=F,axes=c(1,3))
+```
+
+
+Al construir el árbol, se eligen 3 grupos basándose en el diagrama de barras del dendrograma.
+
+
+```{r}
+round(res.HCPC$desc.var$category$`1`,3)
+```
+
+
+Predominan los pacientes menos graves o sin complicaciones fatales, con una baja mortalidad hospitalaria (hospdead_no, death_no). Estos pacientes presentan una alta prevalencia de enfermedades crónicas controladas, como insuficiencia cardíaca congestiva (dzgroup_CHF), EPOC (dzgroup_COPD) y otras condiciones controladas. Además, tienen una mayor capacidad funcional y menor gravedad, con un número mayor de co-morbilidades leves a moderadas (num.co_3, num.co_4+). También es destacable la clasificación de enfermedades crónicas controladas (dzclass_C.C.C) y la prevalencia de diabetes (diabetes_yes). En cuanto al estado económico, un porcentaje considerable pertenece a los ingresos bajos, con valores por debajo de \$11k.No se encuentran pacientes con enfermedades terminales ni decisiones de no reanimar (dnr_no).
+
+
+```{r}
+round(res.HCPC$desc.var$category$`2`,3)
+```
+
+
+Las características principales de este grupo están asociadas a pacientes críticos, con una alta mortalidad (death_yes, hospdead_yes) y una alta frecuencia de condiciones terminales, como coma (dzclass_Coma) o intubación reciente (sfdm2=\<2 mo. follow-up). Además, presentan una mayor proporción de pacientes con órdenes de no reanimar (dnr_yes). En términos de gravedad funcional, muchos presentan dependencia severa o carecen de datos funcionales (adlp.NA). También se observa una mayor proporción de pacientes con cáncer avanzado (ca_metastatic). En cuanto a los aspectos socioeconómicos, se destaca una distribución homogénea entre los diferentes niveles de ingresos.
+
+
+```{r}
+round(res.HCPC$desc.var$category$`3`,3)
+```
+
+
+Las características principales de este grupo están asociadas a pacientes con cáncer avanzado y alta gravedad, con una alta prevalencia de cáncer metastásico (ca_metastatic) y una clasificación severa de enfermedades (dzclass_C y dzgroup_L.C). A pesar de la gravedad de su condición, algunos pacientes mantienen una mayor capacidad funcional residual (adlp_0, num.co_1). En cuanto a los aspectos socioeconómicos, se observa una distribución hacia ingresos elevados (income \>\$50k). Además, se destaca una menor proporción de comorbilidades como insuficiencia cardíaca y EPOC (dzgroup_CHF, dzgroup_COPD).
+
+## 
+

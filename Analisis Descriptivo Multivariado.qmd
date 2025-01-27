@@ -422,7 +422,7 @@ Al construir el árbol, se eligen 3 grupos basándose en el diagrama de barras d
 round(res.HCPC$desc.var$category$`1`,3)
 ```
 
-Predominan los pacientes menos graves o sin complicaciones fatales, con una baja mortalidad hospitalaria (hospdead_no, death_no). Estos pacientes presentan una alta prevalencia de enfermedades crónicas controladas, como insuficiencia cardíaca congestiva (dzgroup_CHF), EPOC (dzgroup_COPD) y otras condiciones controladas. Además, tienen una mayor capacidad funcional y menor gravedad, con un número mayor de co-morbilidades leves a moderadas (num.co_3, num.co_4+). También es destacable la clasificación de enfermedades crónicas controladas (dzclass_C.C.C) y la prevalencia de diabetes (diabetes_yes). En cuanto al estado económico, un porcentaje considerable pertenece a los ingresos bajos, con valores por debajo de \$11k.No se encuentran pacientes con enfermedades terminales ni decisiones de no reanimar (dnr_no).
+Predominan los pacientes menos graves o sin complicaciones fatales, con una baja mortalidad hospitalaria (hospdead_no, death_no). Estos pacientes presentan una alta prevalencia de enfermedades, como insuficiencia cardíaca congestiva (dzgroup_CHF), EPOC (dzgroup_COPD) y otras condiciones controladas. Además, tienen una mayor capacidad funcional y menor gravedad, con un número mayor de co-morbilidades leves a moderadas (num.co_3, num.co_4+). También es destacable la clasificación de enfermedades COPD/CHF/Cirrhosi (dzclass_C.C.C) y la prevalencia de diabetes (diabetes_yes). En cuanto al estado económico, un porcentaje considerable pertenece a los ingresos bajos, con valores por debajo de \$11k. Hat orden de no reanimar (dnr_no).
 
 ```{r}
 round(res.HCPC$desc.var$category$`2`,3)
