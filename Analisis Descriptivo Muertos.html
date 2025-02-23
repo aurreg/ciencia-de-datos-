@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Analisis Descriptivo Multivariado</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Analisis Descriptivo Muertos_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Analisis Descriptivo Muertos_files/libs/quarto-html/quarto.js"></script>
+<script src="Analisis Descriptivo Muertos_files/libs/quarto-html/popper.min.js"></script>
+<script src="Analisis Descriptivo Muertos_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Analisis Descriptivo Muertos_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Analisis Descriptivo Muertos_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Analisis Descriptivo Muertos_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Analisis Descriptivo Muertos_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Analisis Descriptivo Muertos_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Analisis Descriptivo Muertos_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Analisis Descriptivo Multivariado</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="procesamiento-de-variables" class="level1">
+<h1>Procesamiento de variables</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cambia idioma de la consola de R a español:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="at">LANG=</span><span class="st">"es"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># usar 2 cifras significativas y tiende a evitar </span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># notación científica (ver ayuda de función: `options`): </span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">digits =</span> <span class="dv">2</span>, <span class="at">scipen =</span> <span class="dv">999</span>) </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># cargar librerías: </span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargar librerías y suprimir mensajes y advertencias individualmente</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>(<span class="fu">suppressWarnings</span>(<span class="fu">library</span>(FactoClass)))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>(<span class="fu">suppressWarnings</span>(<span class="fu">library</span>(Factoshiny)))</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>(<span class="fu">suppressWarnings</span>(<span class="fu">library</span>(factoextra)))</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>(<span class="fu">suppressWarnings</span>(<span class="fu">library</span>(plotly)))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>(<span class="fu">suppressWarnings</span>(<span class="fu">library</span>(dplyr)))</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>(<span class="fu">suppressWarnings</span>(<span class="fu">library</span>(readxl)))</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>(<span class="fu">suppressWarnings</span>(<span class="fu">library</span>(ggplot2)))</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>(<span class="fu">suppressWarnings</span>(<span class="fu">library</span>(knitr)))</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>(<span class="fu">suppressWarnings</span>(<span class="fu">library</span>(htmlwidgets)))</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>(<span class="fu">suppressWarnings</span>(<span class="fu">library</span>(ggpubr)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"SUPPPORT2.xlsx"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>datos<span class="ot">&lt;-</span>datos<span class="sc">%&gt;%</span><span class="fu">mutate</span>(<span class="at">num.co=</span><span class="fu">case_when</span>(num.co<span class="sc">&gt;=</span><span class="dv">4</span><span class="sc">~</span> <span class="st">'4+'</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                                       <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.character</span>(num.co)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>datos[,<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">7</span>,<span class="dv">13</span>,<span class="dv">19</span>,<span class="dv">20</span>,<span class="dv">21</span>,<span class="dv">24</span>,<span class="dv">40</span>,<span class="dv">41</span>,<span class="dv">43</span>,<span class="dv">44</span>,<span class="dv">45</span>)]<span class="ot">&lt;-</span><span class="fu">lapply</span>(datos[,<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">7</span>,<span class="dv">13</span>,<span class="dv">19</span>,<span class="dv">20</span>,<span class="dv">21</span>,<span class="dv">24</span>,<span class="dv">40</span>,<span class="dv">41</span>,<span class="dv">43</span>,<span class="dv">44</span>,<span class="dv">45</span>)],as.factor)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>datos</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 9,105 × 45
+     age sex    dzgroup dzclass num.co   edu income scoma charges totcst totmcst
+   &lt;dbl&gt; &lt;fct&gt;  &lt;fct&gt;   &lt;fct&gt;   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;  &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;
+ 1  62.8 male   Lung C… Cancer  0         11 $11-$…     0    9715     NA      NA
+ 2  60.3 female Cirrho… COPD/C… 2         12 $11-$…    44   34496     NA      NA
+ 3  52.7 female Cirrho… COPD/C… 2         12 under…     0   41094     NA      NA
+ 4  42.4 female Lung C… Cancer  2         11 under…     0    3075     NA      NA
+ 5  79.9 female ARF/MO… ARF/MO… 1         NA &lt;NA&gt;      26   50127     NA      NA
+ 6  93.0 male   Coma    Coma    1         14 &lt;NA&gt;      55    6884     NA      NA
+ 7  62.4 male   CHF     COPD/C… 1         14 $25-$…     0   30460     NA      NA
+ 8  86.8 male   CHF     COPD/C… 3         NA &lt;NA&gt;      26   30460     NA      NA
+ 9  85.7 male   Lung C… Cancer  2         12 &lt;NA&gt;      26      NA     NA      NA
+10  42.3 female Colon … Cancer  0         11 $25-$…     0    9914     NA      NA
+# ℹ 9,095 more rows
+# ℹ 34 more variables: avtisst &lt;dbl&gt;, race &lt;fct&gt;, sps &lt;dbl&gt;, aps &lt;dbl&gt;,
+#   surv2m &lt;dbl&gt;, surv6m &lt;dbl&gt;, hday &lt;dbl&gt;, diabetes &lt;fct&gt;, dementia &lt;fct&gt;,
+#   ca &lt;fct&gt;, prg2m &lt;dbl&gt;, prg6m &lt;dbl&gt;, dnr &lt;fct&gt;, dnrday &lt;dbl&gt;, meanbp &lt;dbl&gt;,
+#   wblc &lt;dbl&gt;, hrt &lt;dbl&gt;, resp &lt;dbl&gt;, temp &lt;dbl&gt;, pafi &lt;dbl&gt;, alb &lt;dbl&gt;,
+#   bili &lt;dbl&gt;, crea &lt;dbl&gt;, sod &lt;dbl&gt;, ph &lt;dbl&gt;, glucose &lt;dbl&gt;, bun &lt;dbl&gt;,
+#   urine &lt;dbl&gt;, adlp &lt;fct&gt;, adls &lt;fct&gt;, adlsc &lt;dbl&gt;, death &lt;fct&gt;, …</code></pre>
+</div>
+</div>
+<p><strong>Sex</strong></p>
+<p>La variable Sex no parece nesesitar ninguna recategorizacion.</p>
+<p>Nuevos Niveles:</p>
+<p>female : f</p>
+<p>male : m</p>
+<p><strong>dzgroup: Subcategoría enfermedad del paciente.</strong></p>
+<p>Nuevos Niveles:</p>
+<p>Lung Cancer = L.C</p>
+<p>Cirrhosis = C</p>
+<p>ARF/MOSF w/ Sepsis = A.M.S</p>
+<p>Coma = Coma</p>
+<p>CHF = CHF</p>
+<p>Colon Cancer&nbsp;= C.C</p>
+<p>COPD = COPD</p>
+<p>MOSF w/Malig = M.M</p>
+<p><strong>dzclass:Categoría enfermedad del paciante.</strong></p>
+<p>Nuevos Niveles:</p>
+<p>ARF/MOSF = A.M</p>
+<p>Cancer= C</p>
+<p>Coma = Coma</p>
+<p>COPD/CHF/Cirrhosis = C.C.C</p>
+<p><strong>race</strong></p>
+<p>Hay muy pocos asiaticos, negros, hispanos y otros por lo que se binzariza la variable en blancos y otros</p>
+<p>nuevos nivels</p>
+<p>white=w</p>
+<p>other=o</p>
+<section id="section" class="level3">
+<h3 class="anchored" data-anchor-id="section"></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>datos<span class="ot">&lt;-</span>datos<span class="sc">%&gt;%</span><span class="fu">mutate</span>(<span class="at">dzgroup=</span><span class="fu">case_when</span>(dzgroup<span class="sc">==</span><span class="st">"Lung Cancer"</span><span class="sc">~</span> <span class="st">'L.C'</span>,</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                                        dzgroup<span class="sc">==</span><span class="st">"Cirrhosis"</span><span class="sc">~</span> <span class="st">'C'</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                                        dzgroup<span class="sc">==</span><span class="st">"ARF/MOSF w/Sepsis"</span><span class="sc">~</span> <span class="st">'A.M.S'</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                                        dzgroup<span class="sc">==</span><span class="st">"Coma"</span><span class="sc">~</span> <span class="st">'Coma'</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                                        dzgroup<span class="sc">==</span><span class="st">"CHF"</span><span class="sc">~</span> <span class="st">'CHF'</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                                        dzgroup<span class="sc">==</span><span class="st">"Colon Cancer"</span><span class="sc">~</span> <span class="st">'C.C'</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                                        dzgroup<span class="sc">==</span><span class="st">"COPD"</span><span class="sc">~</span> <span class="st">'COPD'</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                                        dzgroup<span class="sc">==</span><span class="st">"MOSF w/Malig"</span><span class="sc">~</span> <span class="st">'M.M'</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                                        T<span class="sc">~</span><span class="st">'NA'</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>datos<span class="ot">&lt;-</span>datos<span class="sc">%&gt;%</span><span class="fu">mutate</span>(<span class="at">dzclass=</span><span class="fu">case_when</span>(dzclass<span class="sc">==</span><span class="st">"ARF/MOSF"</span><span class="sc">~</span> <span class="st">'A.M'</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>                                       dzclass<span class="sc">==</span><span class="st">"Cancer"</span><span class="sc">~</span> <span class="st">'C'</span>,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>                                       dzclass<span class="sc">==</span><span class="st">"Coma"</span><span class="sc">~</span> <span class="st">'Coma'</span>,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>                                       T<span class="sc">~</span><span class="st">'C.C.C'</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>datos<span class="ot">&lt;-</span>datos<span class="sc">%&gt;%</span><span class="fu">mutate</span>(<span class="at">race=</span><span class="fu">case_when</span>(race<span class="sc">==</span><span class="st">"white"</span><span class="sc">~</span> <span class="st">'W'</span>,</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>                                     </span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>                                     T<span class="sc">~</span><span class="st">'O'</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>datos<span class="ot">&lt;-</span>datos<span class="sc">%&gt;%</span><span class="fu">mutate</span>(<span class="at">dementia=</span><span class="fu">case_when</span>(dementia<span class="sc">==</span><span class="dv">1</span><span class="sc">~</span> <span class="st">'yes'</span>,</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>                                         </span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>                                         T<span class="sc">~</span><span class="st">'no'</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>datos<span class="ot">&lt;-</span>datos<span class="sc">%&gt;%</span><span class="fu">mutate</span>(<span class="at">diabetes=</span><span class="fu">case_when</span>(diabetes<span class="sc">==</span><span class="dv">1</span><span class="sc">~</span> <span class="st">'yes'</span>,</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>                                         </span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>                                         T<span class="sc">~</span><span class="st">'no'</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>datos<span class="ot">&lt;-</span>datos<span class="sc">%&gt;%</span><span class="fu">mutate</span>(<span class="at">dnr=</span><span class="fu">case_when</span>(dnr<span class="sc">==</span><span class="st">'dnr after sadm'</span><span class="sc">~</span> <span class="st">'yes'</span>,</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>                                    dnr<span class="sc">==</span><span class="st">'dnr before sadm'</span><span class="sc">~</span> <span class="st">'yes'</span>,</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>                                         T<span class="sc">~</span><span class="st">'no'</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>datos<span class="ot">&lt;-</span>datos<span class="sc">%&gt;%</span><span class="fu">mutate</span>(<span class="at">death=</span><span class="fu">case_when</span>(death<span class="sc">==</span><span class="dv">1</span><span class="sc">~</span> <span class="st">'yes'</span>,</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>                                      </span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>                                      T<span class="sc">~</span><span class="st">'no'</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>datos<span class="ot">&lt;-</span>datos<span class="sc">%&gt;%</span><span class="fu">mutate</span>(<span class="at">hospdead=</span><span class="fu">case_when</span>(hospdead<span class="sc">==</span><span class="dv">1</span><span class="sc">~</span> <span class="st">'yes'</span>,</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>                                         </span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>                                         T<span class="sc">~</span><span class="st">'no'</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>datos[,<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">7</span>,<span class="dv">13</span>,<span class="dv">19</span>,<span class="dv">20</span>,<span class="dv">21</span>,<span class="dv">24</span>,<span class="dv">40</span>,<span class="dv">41</span>,<span class="dv">43</span>,<span class="dv">44</span>,<span class="dv">45</span>)]<span class="ot">&lt;-</span><span class="fu">lapply</span>(datos[,<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">7</span>,<span class="dv">13</span>,<span class="dv">19</span>,<span class="dv">20</span>,<span class="dv">21</span>,<span class="dv">24</span>,<span class="dv">40</span>,<span class="dv">41</span>,<span class="dv">43</span>,<span class="dv">44</span>,<span class="dv">45</span>)],as.factor)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="acp" class="level3">
+<h3 class="anchored" data-anchor-id="acp">ACP</h3>
+<p>De acuerdo con el análisis exploratorio de los datos, se decide utilizar como variables activas para el ACP aquellas que presenten menos valores faltantes (NA) y menos valores atípicos (outliers). Las variables seleccionadas son: <strong>“age”</strong>, <strong>“avtisst”</strong>, <strong>“surv2m”</strong>, <strong>“surv6m”</strong>, <strong>“meanbp”</strong>, <strong>“hrt”</strong> y <strong>“temp”</strong>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>outlier_count <span class="ot">&lt;-</span> <span class="cf">function</span>(column) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.numeric</span>(column)) { <span class="co"># Verificar si la columna es numérica</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    Q1 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(column, <span class="fl">0.25</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)  <span class="co"># Primer cuartil</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    Q3 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(column, <span class="fl">0.75</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)  <span class="co"># Tercer cuartil</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    IQR <span class="ot">&lt;-</span> Q3 <span class="sc">-</span> Q1  <span class="co"># Rango intercuartil</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    lower_bound <span class="ot">&lt;-</span> Q1 <span class="sc">-</span> <span class="fl">1.5</span> <span class="sc">*</span> IQR  <span class="co"># Límite inferior</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    upper_bound <span class="ot">&lt;-</span> Q3 <span class="sc">+</span> <span class="fl">1.5</span> <span class="sc">*</span> IQR  <span class="co"># Límite superior</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">sum</span>(column <span class="sc">&lt;</span> lower_bound <span class="sc">|</span> column <span class="sc">&gt;</span> upper_bound, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="dv">0</span>)  <span class="co"># Si no es numérico, no hay atípicos</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>colores <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">"red"</span>,<span class="st">"blue"</span>,<span class="st">"yellow"</span>,<span class="st">"pink"</span>,<span class="st">"green"</span>,<span class="st">"orange"</span>),<span class="dv">5</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>), <span class="at">mai=</span><span class="fu">c</span>(<span class="fl">0.3</span>,<span class="fl">0.4</span>,<span class="fl">0.3</span>,<span class="fl">0.1</span>), <span class="at">las=</span><span class="dv">1</span>, <span class="at">bty=</span><span class="st">"n"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="co"># Encuentra las posiciones de las columnas</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">match</span>(<span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"avtisst"</span>, <span class="st">"surv2m"</span>, <span class="st">"surv6m"</span>, <span class="st">"meanbp"</span>, <span class="st">"hrt"</span>, <span class="st">"temp"</span>), <span class="fu">names</span>(datos))) <span class="fu">boxplot</span>(datos[,i], <span class="at">main=</span><span class="fu">names</span>(datos)[i], <span class="at">col=</span>colores[i])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-5-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(datos[,<span class="sc">-</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">7</span>,<span class="dv">13</span>,<span class="dv">19</span>,<span class="dv">20</span>,<span class="dv">21</span>,<span class="dv">24</span>,<span class="dv">40</span>,<span class="dv">41</span>,<span class="dv">43</span>,<span class="dv">44</span>,<span class="dv">45</span>)], outlier_count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    age     edu   scoma charges  totcst totmcst avtisst     sps     aps  surv2m 
+     56     199    1955     912     749     495      43     283     178     307 
+ surv6m    hday   prg2m   prg6m  dnrday  meanbp    wblc     hrt    resp    temp 
+      0    1543       0       0     799       6     399      40     313      14 
+   pafi     alb    bili    crea     sod      ph glucose     bun   urine   adlsc 
+     90      15     926     987     256     260     272     267      92       0 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>res.PCA<span class="ot">&lt;-</span><span class="fu">PCA</span>(datos,<span class="at">quali.sup=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">7</span>,<span class="dv">13</span>,<span class="dv">19</span>,<span class="dv">20</span>,<span class="dv">21</span>,<span class="dv">24</span>,<span class="dv">40</span>,<span class="dv">41</span>,<span class="dv">43</span>,<span class="dv">44</span>,<span class="dv">45</span>),<span class="at">quanti.sup=</span><span class="fu">c</span>(<span class="dv">6</span>,<span class="dv">9</span>,<span class="dv">10</span>,<span class="dv">11</span>,<span class="dv">14</span>,<span class="dv">15</span>,<span class="dv">18</span>,<span class="dv">22</span>,<span class="dv">23</span>,<span class="dv">25</span>,<span class="dv">27</span>,<span class="dv">29</span>,<span class="dv">31</span>,<span class="dv">32</span>,<span class="dv">33</span>,<span class="dv">34</span>,<span class="dv">35</span>,<span class="dv">36</span>,<span class="dv">37</span>,<span class="dv">38</span>,<span class="dv">39</span>,<span class="dv">42</span>),<span class="at">graph=</span><span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in PCA(datos, quali.sup = c(2, 3, 4, 5, 7, 13, 19, 20, 21, 24, 40, :
+Missing values are imputed by the mean of the variable: you should use the
+imputePCA function of the missMDA package</code></pre>
+</div>
+</div>
+<p>Observando el histograma de los valores propios divididos por la inercia total, se decide analizar cuatro ejes, dado que retienen alrededor del 40% de la variabilidad.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(res.PCA<span class="sc">$</span>eig[,<span class="dv">1</span>]<span class="sc">/</span><span class="fu">sum</span>(res.PCA<span class="sc">$</span>eig[,<span class="dv">1</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cumsum</span>(res.PCA<span class="sc">$</span>eig[,<span class="dv">1</span>]<span class="sc">/</span><span class="fu">sum</span>(res.PCA<span class="sc">$</span>eig[,<span class="dv">1</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>comp 1 comp 2 comp 3 comp 4 comp 5 comp 6 comp 7 comp 8 
+  0.34   0.52   0.65   0.76   0.86   0.94   1.00   1.00 </code></pre>
+</div>
+</div>
+<p>Las variables que más contribuyen a la construcción del primer eje son los índices de supervivencia Schoma y Avissst. En el segundo eje, las variables principales son la temperatura, la frecuencia cardíaca y la edad. En el tercer eje, predominan la presión arterial y la edad, mientras que en el cuarto eje destacan la edad, la temperatura y la presión arterial.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res.PCA, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res.PCA, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-9-2.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res.PCA, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-9-3.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res.PCA, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-9-4.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Se grafican los círculos de correlaciones correspondientes a tres planos factoriales, incluyendo únicamente las variables ilustrativas y activas con un <span class="math inline">\(cos^2 &gt; 0.2\)</span>. Esto se realiza para facilitar la lectura y mejorar la interpretación de los resultados.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>umbral_cos2 <span class="ot">&lt;-</span> <span class="fl">0.2</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtrar las variables según su cos2</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>variables_filtradas <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res.PCA<span class="sc">$</span>var<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res.PCA<span class="sc">$</span>var<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtrar las variables según su cos2</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>variables_filtradas2 <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res.PCA<span class="sc">$</span>quanti.sup<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res.PCA<span class="sc">$</span>quanti<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>variables_filtradas<span class="ot">&lt;-</span><span class="fu">c</span>(variables_filtradas,variables_filtradas2)</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_pca_var</span>(res.PCA, <span class="at">axes=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>), <span class="at">col.var=</span><span class="st">"cos2"</span>,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>             <span class="at">select.var =</span> <span class="fu">list</span>(<span class="at">name =</span>variables_filtradas),</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>             <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"darkred"</span>, </span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkorange"</span>, </span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkgreen"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>En el primer eje se puede observar una correlación positiva con el índice y la estimación de supervivencia de los pacientes, y una correlación negativa con el score de coma y la puntuación promedio del sistema de calificación de la intervención terapéutica (TISS), que cuantifica la intensidad del tratamiento suministrado al paciente.</p>
+<p>El segundo eje presenta una correlación positiva con el TISS, la temperatura y la frecuencia cardíaca, y una correlación negativa con la edad.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>umbral_cos2 <span class="ot">&lt;-</span> <span class="fl">0.2</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtrar las variables según su cos2</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>variables_filtradas <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res.PCA<span class="sc">$</span>var<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res.PCA<span class="sc">$</span>var<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtrar las variables según su cos2</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>variables_filtradas2 <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res.PCA<span class="sc">$</span>quanti.sup<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res.PCA<span class="sc">$</span>quanti<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>variables_filtradas<span class="ot">&lt;-</span><span class="fu">c</span>(variables_filtradas,variables_filtradas2)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_pca_var</span>(res.PCA, <span class="at">axes=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>), <span class="at">col.var=</span><span class="st">"cos2"</span>,</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>             <span class="at">select.var =</span> <span class="fu">list</span>(<span class="at">name =</span>variables_filtradas),</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>             <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"darkred"</span>, </span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkorange"</span>, </span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkgreen"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>En el tercer eje se observa una alta correlación positiva con la presión arterial, mientras que en el cuarto eje se identifica una correlación positiva con la temperatura, la edad y la presión arterial.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>umbral_cos2 <span class="ot">&lt;-</span> <span class="fl">0.2</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtrar las variables según su cos2</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>variables_filtradas <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res.PCA<span class="sc">$</span>var<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res.PCA<span class="sc">$</span>var<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">4</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtrar las variables según su cos2</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>variables_filtradas2 <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res.PCA<span class="sc">$</span>quanti.sup<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res.PCA<span class="sc">$</span>quanti<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">4</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>variables_filtradas<span class="ot">&lt;-</span><span class="fu">c</span>(variables_filtradas,variables_filtradas2)</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_pca_var</span>(res.PCA, <span class="at">axes=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">4</span>), <span class="at">col.var=</span><span class="st">"cos2"</span>,</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>             <span class="at">select.var =</span> <span class="fu">list</span>(<span class="at">name =</span>variables_filtradas),</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>             <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"darkred"</span>, </span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkorange"</span>, </span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkgreen"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Para el gráfico de los promedios de las variables ilustrativas, se seleccionan aquellas que tengan valores test mayores a 3.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>umbral <span class="ot">&lt;-</span> <span class="dv">3</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>quali.sup <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(res.PCA<span class="sc">$</span>quali.sup<span class="sc">$</span>coord[<span class="fu">apply</span>(<span class="fu">abs</span>(res.PCA<span class="sc">$</span>quali.sup<span class="sc">$</span>v.test[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)]), <span class="dv">1</span>, max) <span class="sc">&gt;=</span> umbral,])</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>quali.sup<span class="sc">$</span>name <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res.PCA<span class="sc">$</span>quali.sup<span class="sc">$</span>cos2)[<span class="fu">apply</span>(<span class="fu">abs</span>(res.PCA<span class="sc">$</span>quali.sup<span class="sc">$</span>v.test[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)]), <span class="dv">1</span>, max) <span class="sc">&gt;=</span> umbral]</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggscatter</span>(quali.sup, <span class="at">x =</span> <span class="st">"Dim.1"</span>, <span class="at">y =</span> <span class="st">"Dim.2"</span>, <span class="at">label =</span> <span class="st">"name"</span>,</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>          <span class="at">ylim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">2.5</span>, <span class="fl">2.5</span>), <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">2.5</span>, <span class="fl">2.5</span>),</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>)<span class="sc">+</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>)<span class="sc">+</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>res.PCA<span class="sc">$</span>quali.sup<span class="sc">$</span>v.test</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                      Dim.1  Dim.2   Dim.3    Dim.4   Dim.5
+female               -2.332  -1.20   3.033   1.7466  0.9668
+male                  2.332   1.20  -3.033  -1.7466 -0.9668
+dzgroup_A.M.S       -13.369  21.73 -13.064  -5.1702  3.7811
+dzgroup_C             4.943   2.68  -3.358  -7.2961 -2.8515
+dzgroup_C.C          12.156  -3.99   5.613   2.3167  2.6549
+dzgroup_CHF          30.684 -13.64  -2.604   8.7531 -1.5187
+dzgroup_Coma        -35.229  -3.14  10.545 -13.9374 20.9100
+dzgroup_COPD         17.954  -7.73   7.825  11.6772 -4.1807
+dzgroup_L.C           3.818 -11.34   9.580   2.8130 -8.7274
+dzgroup_M.M         -23.893   4.40  -4.157  -1.7908 -9.3892
+dzclass_A.M         -25.913  23.58 -14.991  -6.0112 -1.3636
+dzclass_C            10.872 -11.90  11.475   3.7942 -5.5218
+dzclass_C.C.C        38.110 -14.36   1.518  10.9176 -5.3599
+dzclass_Coma        -35.229  -3.14  10.545 -13.9374 20.9100
+num.co_0             -8.309  15.43  -4.925 -10.1174  8.5916
+num.co_1             -6.183   2.17   2.155  -0.8182 -0.9480
+num.co_2              0.935  -4.77  -0.550   4.6595 -3.8257
+num.co_3              7.758  -4.79   1.393   2.8399 -0.9804
+num.co_4+             7.562  -7.24   1.150   2.1333 -1.2137
+$11-$25k              2.734  -0.34   1.036  -0.8416 -0.0428
+$25-$50k              0.392   5.56  -3.096  -3.0296 -1.0077
+&gt;$50k                 1.347   3.00  -2.608  -2.2473  0.7184
+under $11k            6.416  -2.05   2.865  -0.5966 -2.4480
+O                     0.166  10.21  -4.783 -13.3820 -0.0056
+W                    -0.166 -10.21   4.783  13.3820  0.0056
+diabetes_no          -2.427   6.33  -0.899  -3.4465 -4.6872
+diabetes_yes          2.427  -6.33   0.899   3.4465  4.6872
+dementia_no           4.663  11.11  -8.424  -9.4508 -4.2138
+dementia_yes         -4.663 -11.11   8.424   9.4508  4.2138
+ca_metastatic         2.339 -11.67  10.345   4.1038 -8.3944
+ca_no                 9.182  11.76  -9.725  -6.3453  9.7861
+ca_yes              -15.381  -2.54   1.286   3.9354 -3.6526
+dnr_no               43.044  11.75  -7.565  -4.6886  1.9941
+dnr_yes             -43.044 -11.75   7.565   4.6886 -1.9941
+adlp_0               30.049  -2.69  -0.996   1.4519 -1.5976
+adlp_1               16.082  -5.46   3.582   3.7756 -0.7972
+adlp_2               10.664  -4.02   0.941   3.6901 -1.0973
+adlp_3                5.773  -4.11   0.020   2.8558 -1.5902
+adlp_4                4.772  -3.68   0.810   2.4465 -0.7222
+adlp_5                5.806  -2.59   1.029  -0.8308 -2.8662
+adlp_6                5.107  -0.50  -0.660  -0.6054 -1.9379
+adlp_7                1.821  -0.90   0.065   0.0037 -2.4080
+adls_0                4.660   7.72  -4.376  -6.4864  0.3349
+adls_1                0.738  -1.37   2.494   2.6144  0.8007
+adls_2                0.695  -1.26   2.338   4.2430 -0.9251
+adls_3                0.312  -2.05   1.485   2.2037 -1.9980
+adls_4                1.082  -1.20   2.408   2.0281 -0.3825
+adls_5               -2.075  -0.85   1.732   1.7530 -3.4469
+adls_6               -3.004  -1.50   1.381  -1.0198 -0.7011
+adls_7               -6.420  -1.57   2.241  -1.1627  2.4175
+death_no             29.256  15.19  -8.203  -5.0605  5.1246
+death_yes           -29.256 -15.19   8.203   5.0605 -5.1246
+hospdead_no          57.225  -3.39   4.779   8.3157  2.9831
+hospdead_yes        -57.225   3.39  -4.779  -8.3157 -2.9831
+&lt;2 mo. follow-up    -52.345  -4.50   1.120  -3.6616 -3.9992
+adl&gt;=4 (&gt;=5 if sur)   0.016   2.57   3.534   2.3771  2.3516
+Coma or Intub        -4.780   2.21  -3.008  -0.0389  2.0380
+no(M2 and SIP pres)  36.402  -0.13  -1.926   1.4774  1.5914
+SIP&gt;=30              10.271   2.31  -1.915  -0.2273 -1.5321</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>res.PCA<span class="sc">$</span>quali.sup<span class="sc">$</span>coord</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                       Dim.1   Dim.2   Dim.3   Dim.4     Dim.5
+female              -0.04601 -0.0170  0.0360  0.0201  0.010030
+male                 0.03573  0.0132 -0.0280 -0.0156 -0.007789
+dzgroup_A.M.S       -0.29314  0.3411 -0.1725 -0.0662  0.043594
+dzgroup_C            0.35354  0.1374 -0.1446 -0.3047 -0.107245
+dzgroup_C.C          0.86585 -0.2033  0.2408  0.0963  0.099439
+dzgroup_CHF          1.25852 -0.4005 -0.0643  0.2096 -0.032753
+dzgroup_Coma        -2.31446 -0.1477  0.4172 -0.5346  0.722324
+dzgroup_COPD         0.90561 -0.2791  0.2377  0.3439 -0.110882
+dzgroup_L.C          0.19947 -0.4242  0.3014  0.0858 -0.239734
+dzgroup_M.M         -1.42631  0.1882 -0.1495 -0.0624 -0.294719
+dzclass_A.M         -0.48401  0.3153 -0.1686 -0.0656 -0.013392
+dzclass_C            0.43975 -0.3445  0.2795  0.0896 -0.117441
+dzclass_C.C.C        0.97865 -0.2640  0.0235  0.1637 -0.072373
+dzclass_Coma        -2.31446 -0.1477  0.4172 -0.5346  0.722324
+num.co_0            -0.37495  0.4983 -0.1338 -0.2666  0.203859
+num.co_1            -0.15313  0.0385  0.0321 -0.0118 -0.012346
+num.co_2             0.02720 -0.0992 -0.0096  0.0791 -0.058511
+num.co_3             0.31317 -0.1383  0.0339  0.0669 -0.020809
+num.co_4+            0.35468 -0.2429  0.0325  0.0584 -0.029933
+$11-$25k             0.10588 -0.0094  0.0242 -0.0190 -0.000871
+$25-$50k             0.01880  0.1908 -0.0895 -0.0849 -0.025421
+&gt;$50k                0.08217  0.1309 -0.0958 -0.0800  0.023044
+under $11k           0.16506 -0.0377  0.0444 -0.0090 -0.033113
+O                    0.00559  0.2463 -0.0971 -0.2633 -0.000099
+W                   -0.00149 -0.0656  0.0258  0.0701  0.000026
+diabetes_no         -0.02079  0.0388 -0.0046 -0.0172 -0.021110
+diabetes_yes         0.08567 -0.1600  0.0191  0.0710  0.086991
+dementia_no          0.01486  0.0253 -0.0162 -0.0176 -0.007062
+dementia_yes        -0.44226 -0.7542  0.4812  0.5234  0.210162
+ca_metastatic        0.08033 -0.2868  0.2139  0.0823 -0.151568
+ca_no                0.11498  0.1054 -0.0733 -0.0464  0.064441
+ca_yes              -0.66979 -0.0791  0.0337  0.1001 -0.083633
+dnr_no               0.55028  0.1075 -0.0582 -0.0350  0.013404
+dnr_yes             -1.01789 -0.1988  0.1077  0.0647 -0.024795
+adlp_0               1.03500 -0.0664 -0.0207  0.0292 -0.028933
+adlp_1               0.96074 -0.2334  0.1289  0.1317 -0.025043
+adlp_2               0.95312 -0.2571  0.0506  0.1926 -0.051568
+adlp_3               0.77555 -0.3950  0.0016  0.2240 -0.112330
+adlp_4               0.70620 -0.3903  0.0721  0.2114 -0.056190
+adlp_5               0.78266 -0.2501  0.0835 -0.0654 -0.203160
+adlp_6               0.85123 -0.0599 -0.0662 -0.0589 -0.169848
+adlp_7               0.42179 -0.1494  0.0091  0.0005 -0.293327
+adls_0               0.11255  0.1335 -0.0636 -0.0915  0.004253
+adls_1               0.03592 -0.0477  0.0731  0.0743  0.020487
+adls_2               0.05184 -0.0672  0.1050  0.1848 -0.036293
+adls_3               0.02809 -0.1325  0.0806  0.1159 -0.094640
+adls_4               0.11062 -0.0879  0.1482  0.1210 -0.020558
+adls_5              -0.18239 -0.0537  0.0917  0.0899 -0.159274
+adls_6              -0.24269 -0.0869  0.0672 -0.0481 -0.029786
+adls_7              -0.60372 -0.1057  0.1269 -0.0638  0.119534
+death_no             0.74331  0.2762 -0.1255 -0.0751  0.068462
+death_yes           -0.34810 -0.1293  0.0588  0.0352 -0.032062
+hospdead_no          0.58855 -0.0250  0.0296  0.0499  0.016132
+hospdead_yes        -1.68210  0.0713 -0.0846 -0.1427 -0.046107
+&lt;2 mo. follow-up    -1.25964 -0.0774  0.0162 -0.0514 -0.050602
+adl&gt;=4 (&gt;=5 if sur)  0.00082  0.0956  0.1106  0.0722  0.064282
+Coma or Intub       -1.23586  0.4091 -0.4683 -0.0059  0.277040
+no(M2 and SIP pres)  0.88938 -0.0023 -0.0283  0.0211  0.020444
+SIP&gt;=30              0.69496  0.1119 -0.0780 -0.0090 -0.054509</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.PCA</span>(res.PCA, <span class="at">axes =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>),<span class="at">label =</span><span class="fu">c</span>(<span class="st">'none'</span>),<span class="at">choix =</span> <span class="fu">c</span>(<span class="st">"ind"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.PCA</span>(res.PCA, <span class="at">axes =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>),<span class="at">label =</span><span class="fu">c</span>(<span class="st">'none'</span>),<span class="at">choix =</span> <span class="fu">c</span>(<span class="st">"ind"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-16-2.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.PCA</span>(res.PCA, <span class="at">axes =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">4</span>),<span class="at">label =</span><span class="fu">c</span>(<span class="st">'none'</span>),<span class="at">choix =</span> <span class="fu">c</span>(<span class="st">"ind"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-16-3.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>ACP para individuos que mueren en el hospital</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>m_hosp <span class="ot">&lt;-</span> datos<span class="sc">%&gt;%</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(hospdead<span class="sc">==</span><span class="st">"yes"</span>)<span class="sc">%&gt;%</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>m_hosp<span class="sc">$</span>hospdead <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(m_hosp<span class="sc">$</span>hospdead)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>m_hosp<span class="sc">$</span>death <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(m_hosp<span class="sc">$</span>death)</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(m_hosp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2360</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(m_hosp[,<span class="sc">-</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">7</span>,<span class="dv">13</span>,<span class="dv">19</span>,<span class="dv">20</span>,<span class="dv">21</span>,<span class="dv">24</span>,<span class="dv">40</span>,<span class="dv">41</span>,<span class="dv">43</span>,<span class="dv">44</span>,<span class="dv">45</span>)], outlier_count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    age     edu   scoma charges  totcst totmcst avtisst     sps     aps  surv2m 
+     10      56       0     212     153     100       4      89      17       0 
+ surv6m    hday   prg2m   prg6m  dnrday  meanbp    wblc     hrt    resp    temp 
+      0     171       0       0     206       2      91       7       7       3 
+   pafi     alb    bili    crea     sod      ph glucose     bun   urine   adlsc 
+     30       6     251     190      29      74      65      62      19       0 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>res<span class="ot">&lt;-</span><span class="fu">PCA</span>(m_hosp,<span class="at">quali.sup=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">7</span>,<span class="dv">13</span>,<span class="dv">19</span>,<span class="dv">20</span>,<span class="dv">21</span>,<span class="dv">24</span>,<span class="dv">40</span>,<span class="dv">41</span>,<span class="dv">43</span>,<span class="dv">44</span>,<span class="dv">45</span>),<span class="at">quanti.sup=</span><span class="fu">c</span>(<span class="dv">6</span>,<span class="dv">10</span>,<span class="dv">11</span>,<span class="dv">22</span>,<span class="dv">23</span>,<span class="dv">31</span>,<span class="dv">32</span>,<span class="dv">33</span>,<span class="dv">36</span>,<span class="dv">38</span>,<span class="dv">39</span>),<span class="at">graph=</span><span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in PCA(m_hosp, quali.sup = c(2, 3, 4, 5, 7, 13, 19, 20, 21, 24, :
+Missing values are imputed by the mean of the variable: you should use the
+imputePCA function of the missMDA package</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">barplot</span>(res<span class="sc">$</span>eig[,<span class="dv">1</span>]<span class="sc">/</span><span class="fu">sum</span>(res<span class="sc">$</span>eig[,<span class="dv">1</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cumsum</span>(res<span class="sc">$</span>eig[,<span class="dv">1</span>]<span class="sc">/</span><span class="fu">sum</span>(res<span class="sc">$</span>eig[,<span class="dv">1</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> comp 1  comp 2  comp 3  comp 4  comp 5  comp 6  comp 7  comp 8  comp 9 comp 10 
+   0.19    0.30    0.38    0.45    0.51    0.56    0.62    0.67    0.72    0.76 
+comp 11 comp 12 comp 13 comp 14 comp 15 comp 16 comp 17 comp 18 comp 19 
+   0.81    0.85    0.89    0.93    0.96    0.97    0.99    1.00    1.00 </code></pre>
+</div>
+</div>
+<p>Se toman 4 ejes para el análisis.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-20-2.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-20-3.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-20-4.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Las variables que más contribuyen al primer eje son las relacionadas con las estimaciones de supervivencia y los soportes fisiológico y psicológico, por lo que separa a los individuos que se estima tienen una probabilidad más alta de sobrevivir de los que no, teniendo que estos últimos tienden a recibir una mayor cantidad de asistencia.</p>
+<p>Las variables que más contribuyen al segundo eje son aquellas relacionadas con los cargos hospitalarios y la edad, siendo que los individuos más jóvenes tienden a tener mayores cargos hospitalarios.</p>
+<p>Las variables que más contribuyen al tercer eje son varaibles relacionadas con características de salud como la frecuencia respiratoria o la temperatura corporal y las que más contribuyen al 4 eje son los días de coma y los cargos hospitalarios.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>umbral_cos2 <span class="ot">&lt;-</span> <span class="fl">0.2</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtrar las variables según su cos2</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>variables_filtradas <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res<span class="sc">$</span>var<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res<span class="sc">$</span>var<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtrar las variables según su cos2</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>variables_filtradas2 <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res<span class="sc">$</span>quanti.sup<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res<span class="sc">$</span>quanti<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>variables_filtradas<span class="ot">&lt;-</span><span class="fu">c</span>(variables_filtradas,variables_filtradas2)</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_pca_var</span>(res, <span class="at">axes=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>), <span class="at">col.var=</span><span class="st">"cos2"</span>,</span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>             <span class="at">select.var =</span> <span class="fu">list</span>(<span class="at">name =</span>variables_filtradas),</span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>             <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"darkred"</span>, </span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkorange"</span>, </span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkgreen"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Se observa que las peronas que presentan índices de supervivencia más altos, suelen recibir menos soportes fisiológicos y psicológicos.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>variables_filtradas <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res<span class="sc">$</span>var<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res<span class="sc">$</span>var<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtrar las variables según su cos2</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>variables_filtradas2 <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res<span class="sc">$</span>quanti.sup<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res<span class="sc">$</span>quanti<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>variables_filtradas<span class="ot">&lt;-</span><span class="fu">c</span>(variables_filtradas,variables_filtradas2)</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_pca_var</span>(res, <span class="at">axes=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>), <span class="at">col.var=</span><span class="st">"cos2"</span>,</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">select.var =</span> <span class="fu">list</span>(<span class="at">name =</span>variables_filtradas),</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>             <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"darkred"</span>, </span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkorange"</span>, </span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkgreen"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>variables_filtradas <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res<span class="sc">$</span>var<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res<span class="sc">$</span>var<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">3</span>,<span class="dv">4</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtrar las variables según su cos2</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>variables_filtradas2 <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res<span class="sc">$</span>quanti.sup<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res<span class="sc">$</span>quanti<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">3</span>,<span class="dv">4</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>variables_filtradas<span class="ot">&lt;-</span><span class="fu">c</span>(variables_filtradas,variables_filtradas2)</span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_pca_var</span>(res, <span class="at">axes=</span><span class="fu">c</span>(<span class="dv">3</span>,<span class="dv">4</span>), <span class="at">col.var=</span><span class="st">"cos2"</span>,</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>             <span class="at">select.var =</span> <span class="fu">list</span>(<span class="at">name =</span>variables_filtradas),</span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"darkred"</span>, </span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkorange"</span>, </span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkgreen"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>variables_filtradas <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res<span class="sc">$</span>var<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res<span class="sc">$</span>var<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">4</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtrar las variables según su cos2</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>variables_filtradas2 <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res<span class="sc">$</span>quanti.sup<span class="sc">$</span>cos2)[<span class="fu">apply</span>(res<span class="sc">$</span>quanti<span class="sc">$</span>cos2[,<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">4</span>)], <span class="dv">1</span>, sum) <span class="sc">&gt;=</span> umbral_cos2]</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>variables_filtradas<span class="ot">&lt;-</span><span class="fu">c</span>(variables_filtradas,variables_filtradas2)</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_pca_var</span>(res, <span class="at">axes=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">4</span>), <span class="at">col.var=</span><span class="st">"cos2"</span>,</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">select.var =</span> <span class="fu">list</span>(<span class="at">name =</span>variables_filtradas),</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>             <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"darkred"</span>, </span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkorange"</span>, </span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"darkgreen"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Analisis-Descriptivo-Muertos_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>res<span class="sc">$</span>quali.sup<span class="sc">$</span>v.test</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                       Dim.1    Dim.2  Dim.3   Dim.4    Dim.5
+female              -1.65104  -1.8326  1.491   5.435  1.11773
+male                 1.65104   1.8326 -1.491  -5.435 -1.11773
+dzgroup_A.M.S       -0.62799  17.1682 -6.542  -4.969  4.31987
+dzgroup_C           -0.81403  -0.7242 -1.830  -3.922 -3.98072
+dzgroup_C.C         -2.43380  -5.3120 -1.284   0.620 -2.22256
+dzgroup_CHF         -7.86781  -3.7214 -3.623  -3.357 -1.43116
+dzgroup_Coma         3.65747 -15.5227  8.274  13.036  8.15675
+dzgroup_COPD        -7.32658  -3.2693  0.446  -0.918  0.81556
+dzgroup_L.C         -4.45063  -9.7598  1.457   0.688 -3.04857
+dzgroup_M.M          9.09764   3.0270  3.078  -2.042 -8.92794
+dzclass_A.M          6.36089  20.4657 -4.532  -6.824 -2.33147
+dzclass_C           -5.12371 -11.2237  0.676   0.909 -3.77688
+dzclass_C.C.C       -9.37111  -4.5329 -2.940  -4.972 -2.88139
+dzclass_Coma         3.65747 -15.5227  8.274  13.036  8.15675
+num.co_0            -0.44267   2.2007  1.752   0.317  3.04536
+num.co_1             1.44437  -0.6786  1.270   1.878 -0.37520
+num.co_2            -0.07757   0.2711 -0.589  -1.790 -0.82885
+num.co_3            -1.45260  -1.5200 -1.912  -0.698 -1.70926
+num.co_4+            0.00064  -0.3101 -1.174   0.034  0.00018
+$11-$25k            -2.42117   1.1960 -1.576   0.437  0.32155
+$25-$50k             1.33213   2.9623  0.649  -1.441 -0.22836
+&gt;$50k               -0.34297   4.2306 -1.711   0.862 -0.64013
+under $11k          -2.66857  -3.0854 -1.581  -1.149 -1.28374
+O                    2.33845   1.4997 -0.061   1.232 -1.18574
+W                   -2.33845  -1.4997  0.061  -1.232  1.18574
+diabetes_no          0.32275   1.9187  3.243  -2.191 -2.57661
+diabetes_yes        -0.32275  -1.9187 -3.243   2.191  2.57661
+dementia_no          2.07602   9.3954 -0.980  -4.233 -2.39679
+dementia_yes        -2.07602  -9.3954  0.980   4.233  2.39679
+ca_metastatic       -0.99356  -9.5899  1.734  -0.224 -5.08296
+ca_no               -4.04543   4.5827 -3.845  -1.157  6.62144
+ca_yes               5.65017   2.8693  3.054   1.564 -3.44395
+dnr_no               0.22144   6.4275 -0.753  -3.410 -0.46092
+dnr_yes             -0.22144  -6.4275  0.753   3.410  0.46092
+adlp_0              -6.92021   1.7993 -2.221  -4.274 -1.58640
+adlp_1              -5.38907  -1.5761 -3.351  -2.000 -0.37078
+adlp_2              -4.15670  -0.7636 -1.515  -0.785 -1.81855
+adlp_3              -2.98326  -0.5117 -1.368   0.042 -2.31344
+adlp_4              -2.00696  -1.1881 -0.064   0.540 -2.15725
+adlp_5              -4.41182  -1.3639 -1.759   0.557 -0.31373
+adlp_6              -1.26642  -0.8948 -2.113  -0.641  0.41503
+adlp_7              -1.21747  -1.5896 -0.050  -0.687 -1.11864
+adls_0              -3.20465  10.0286 -3.173  -9.263 -2.34952
+adls_1              -1.66548   1.6554 -1.358  -2.312  0.13606
+adls_2              -2.45758   2.1378 -0.307   0.102  0.02333
+adls_3              -1.11847   0.0064 -0.578   1.059  0.25619
+adls_4              -2.48410  -1.7665 -1.022   3.054  0.04176
+adls_5              -1.39682  -2.1859  1.517   2.447  0.62252
+adls_6              -1.92384  -3.6158 -0.309   4.159  0.40438
+adls_7              -2.10945  -6.8786  1.062   6.785  2.23702
+death_yes                NaN      NaN    NaN     NaN      NaN
+hospdead_yes             NaN      NaN    NaN     NaN      NaN
+&lt;2 mo. follow-up     4.52463 -20.3249  6.560 -11.994 -6.92258
+adl&gt;=4 (&gt;=5 if sur) -3.56563  15.9394 -5.189   8.488  6.83292
+Coma or Intub       -0.63847   8.6363 -1.122   6.488  1.98057
+no(M2 and SIP pres)  0.13452   4.1313 -1.319   3.438  0.38740
+SIP&gt;=30             -1.66739   3.1051 -2.040   1.539 -0.25346</code></pre>
+</div>
+</div>
+</section>
+<section id="section-1" class="level3">
+<h3 class="anchored" data-anchor-id="section-1"></h3>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

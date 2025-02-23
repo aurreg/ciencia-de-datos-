@@ -1,0 +1,396 @@
+---
+title: "Analisis Descriptivo Multivariado"
+format: html
+editor: visual
+---
+
+# Procesamiento de variables
+
+```{r}
+# cambia idioma de la consola de R a español:
+Sys.setenv(LANG="es")
+# usar 2 cifras significativas y tiende a evitar 
+# notación científica (ver ayuda de función: `options`): 
+options(digits = 2, scipen = 999) 
+# cargar librerías: 
+# Cargar librerías y suprimir mensajes y advertencias individualmente
+suppressMessages(suppressWarnings(library(FactoClass)))
+suppressMessages(suppressWarnings(library(Factoshiny)))
+suppressMessages(suppressWarnings(library(factoextra)))
+suppressMessages(suppressWarnings(library(plotly)))
+suppressMessages(suppressWarnings(library(dplyr)))
+suppressMessages(suppressWarnings(library(readxl)))
+suppressMessages(suppressWarnings(library(ggplot2)))
+suppressMessages(suppressWarnings(library(knitr)))
+suppressMessages(suppressWarnings(library(htmlwidgets)))
+suppressMessages(suppressWarnings(library(ggpubr)))
+```
+
+```{r}
+
+datos <- read_excel("SUPPPORT2.xlsx")
+datos<-datos%>%mutate(num.co=case_when(num.co>=4~ '4+',
+                                       TRUE ~ as.character(num.co)
+))
+datos[,c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)]<-lapply(datos[,c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)],as.factor)
+datos
+```
+
+**Sex**
+
+La variable Sex no parece nesesitar ninguna recategorizacion.
+
+Nuevos Niveles:
+
+female : f
+
+male : m
+
+**dzgroup: Subcategoría enfermedad del paciente.**
+
+Nuevos Niveles:
+
+Lung Cancer = L.C
+
+Cirrhosis = C
+
+ARF/MOSF w/ Sepsis = A.M.S
+
+Coma = Coma
+
+CHF = CHF
+
+Colon Cancer = C.C
+
+COPD = COPD
+
+MOSF w/Malig = M.M
+
+**dzclass:Categoría enfermedad del paciante.**
+
+Nuevos Niveles:
+
+ARF/MOSF = A.M
+
+Cancer= C
+
+Coma = Coma
+
+COPD/CHF/Cirrhosis = C.C.C
+
+**race**
+
+Hay muy pocos asiaticos, negros, hispanos y otros por lo que se binzariza la variable en blancos y otros
+
+nuevos nivels
+
+white=w
+
+other=o
+
+### 
+
+```{r}
+
+datos<-datos%>%mutate(dzgroup=case_when(dzgroup=="Lung Cancer"~ 'L.C',
+                                        dzgroup=="Cirrhosis"~ 'C',
+                                        dzgroup=="ARF/MOSF w/Sepsis"~ 'A.M.S',
+                                        dzgroup=="Coma"~ 'Coma',
+                                        dzgroup=="CHF"~ 'CHF',
+                                        dzgroup=="Colon Cancer"~ 'C.C',
+                                        dzgroup=="COPD"~ 'COPD',
+                                        dzgroup=="MOSF w/Malig"~ 'M.M',
+                                        T~'NA'
+))
+
+datos<-datos%>%mutate(dzclass=case_when(dzclass=="ARF/MOSF"~ 'A.M',
+                                       dzclass=="Cancer"~ 'C',
+                                       dzclass=="Coma"~ 'Coma',
+                                       T~'C.C.C'
+))
+datos<-datos%>%mutate(race=case_when(race=="white"~ 'W',
+                                     
+                                     T~'O'
+))
+
+datos<-datos%>%mutate(dementia=case_when(dementia==1~ 'yes',
+                                         
+                                         T~'no'
+))
+
+datos<-datos%>%mutate(diabetes=case_when(diabetes==1~ 'yes',
+                                         
+                                         T~'no'
+))
+
+
+
+datos<-datos%>%mutate(dnr=case_when(dnr=='dnr after sadm'~ 'yes',
+                                    dnr=='dnr before sadm'~ 'yes',
+                                         T~'no'
+))
+datos<-datos%>%mutate(death=case_when(death==1~ 'yes',
+                                      
+                                      T~'no'
+))
+
+datos<-datos%>%mutate(hospdead=case_when(hospdead==1~ 'yes',
+                                         
+                                         T~'no'
+))
+datos[,c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)]<-lapply(datos[,c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)],as.factor)
+
+```
+
+### ACP
+
+De acuerdo con el análisis exploratorio de los datos, se decide utilizar como variables activas para el ACP aquellas que presenten menos valores faltantes (NA) y menos valores atípicos (outliers). Las variables seleccionadas son: **"age"**, **"avtisst"**, **"surv2m"**, **"surv6m"**, **"meanbp"**, **"hrt"** y **"temp"**.
+
+```{r}
+outlier_count <- function(column) {
+  if (is.numeric(column)) { # Verificar si la columna es numérica
+    Q1 <- quantile(column, 0.25, na.rm = TRUE)  # Primer cuartil
+    Q3 <- quantile(column, 0.75, na.rm = TRUE)  # Tercer cuartil
+    IQR <- Q3 - Q1  # Rango intercuartil
+    lower_bound <- Q1 - 1.5 * IQR  # Límite inferior
+    upper_bound <- Q3 + 1.5 * IQR  # Límite superior
+    return(sum(column < lower_bound | column > upper_bound, na.rm = TRUE))
+  } else {
+    return(0)  # Si no es numérico, no hay atípicos
+  }
+}
+```
+
+```{r}
+colores <- rep(c("red","blue","yellow","pink","green","orange"),5)
+par(mfrow=c(2,3), mai=c(0.3,0.4,0.3,0.1), las=1, bty="n")
+for(i in # Encuentra las posiciones de las columnas
+match(c("age", "avtisst", "surv2m", "surv6m", "meanbp", "hrt", "temp"), names(datos))) boxplot(datos[,i], main=names(datos)[i], col=colores[i])
+```
+
+```{r}
+sapply(datos[,-c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)], outlier_count)
+```
+
+```{r}
+res.PCA<-PCA(datos,quali.sup=c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45),quanti.sup=c(6,9,10,11,14,15,18,22,23,25,27,29,31,32,33,34,35,36,37,38,39,42),graph=FALSE)
+
+```
+
+Observando el histograma de los valores propios divididos por la inercia total, se decide analizar cuatro ejes, dado que retienen alrededor del 40% de la variabilidad.
+
+```{r}
+barplot(res.PCA$eig[,1]/sum(res.PCA$eig[,1]))
+cumsum(res.PCA$eig[,1]/sum(res.PCA$eig[,1]))
+```
+
+Las variables que más contribuyen a la construcción del primer eje son los índices de supervivencia Schoma y Avissst. En el segundo eje, las variables principales son la temperatura, la frecuencia cardíaca y la edad. En el tercer eje, predominan la presión arterial y la edad, mientras que en el cuarto eje destacan la edad, la temperatura y la presión arterial.
+
+```{r}
+fviz_contrib(res.PCA, choice = "var", axes = 1)
+fviz_contrib(res.PCA, choice = "var", axes = 2)
+fviz_contrib(res.PCA, choice = "var", axes = 3)
+fviz_contrib(res.PCA, choice = "var", axes = 4)
+
+
+
+```
+
+Se grafican los círculos de correlaciones correspondientes a tres planos factoriales, incluyendo únicamente las variables ilustrativas y activas con un $cos^2 > 0.2$. Esto se realiza para facilitar la lectura y mejorar la interpretación de los resultados.
+
+```{r}
+umbral_cos2 <- 0.2
+
+# Filtrar las variables según su cos2
+variables_filtradas <- rownames(res.PCA$var$cos2)[apply(res.PCA$var$cos2[,c(1,2)], 1, sum) >= umbral_cos2]
+
+# Filtrar las variables según su cos2
+variables_filtradas2 <- rownames(res.PCA$quanti.sup$cos2)[apply(res.PCA$quanti$cos2[,c(1,2)], 1, sum) >= umbral_cos2]
+variables_filtradas<-c(variables_filtradas,variables_filtradas2)
+fviz_pca_var(res.PCA, axes=c(1,2), col.var="cos2",
+             select.var = list(name =variables_filtradas),
+             gradient.cols = c("darkred", 
+                               "darkorange", 
+                               "darkgreen"))
+
+
+```
+
+En el primer eje se puede observar una correlación positiva con el índice y la estimación de supervivencia de los pacientes, y una correlación negativa con el score de coma y la puntuación promedio del sistema de calificación de la intervención terapéutica (TISS), que cuantifica la intensidad del tratamiento suministrado al paciente.
+
+El segundo eje presenta una correlación positiva con el TISS, la temperatura y la frecuencia cardíaca, y una correlación negativa con la edad.
+
+```{r}
+umbral_cos2 <- 0.2
+
+# Filtrar las variables según su cos2
+variables_filtradas <- rownames(res.PCA$var$cos2)[apply(res.PCA$var$cos2[,c(1,3)], 1, sum) >= umbral_cos2]
+
+# Filtrar las variables según su cos2
+variables_filtradas2 <- rownames(res.PCA$quanti.sup$cos2)[apply(res.PCA$quanti$cos2[,c(1,3)], 1, sum) >= umbral_cos2]
+variables_filtradas<-c(variables_filtradas,variables_filtradas2)
+fviz_pca_var(res.PCA, axes=c(1,3), col.var="cos2",
+             select.var = list(name =variables_filtradas),
+             gradient.cols = c("darkred", 
+                               "darkorange", 
+                               "darkgreen"))
+```
+
+En el tercer eje se observa una alta correlación positiva con la presión arterial, mientras que en el cuarto eje se identifica una correlación positiva con la temperatura, la edad y la presión arterial.
+
+```{r}
+umbral_cos2 <- 0.2
+
+# Filtrar las variables según su cos2
+variables_filtradas <- rownames(res.PCA$var$cos2)[apply(res.PCA$var$cos2[,c(1,4)], 1, sum) >= umbral_cos2]
+
+# Filtrar las variables según su cos2
+variables_filtradas2 <- rownames(res.PCA$quanti.sup$cos2)[apply(res.PCA$quanti$cos2[,c(1,4)], 1, sum) >= umbral_cos2]
+variables_filtradas<-c(variables_filtradas,variables_filtradas2)
+fviz_pca_var(res.PCA, axes=c(1,4), col.var="cos2",
+             select.var = list(name =variables_filtradas),
+             gradient.cols = c("darkred", 
+                               "darkorange", 
+                               "darkgreen"))
+```
+
+Para el gráfico de los promedios de las variables ilustrativas, se seleccionan aquellas que tengan valores test mayores a 3.
+
+```{r}
+
+umbral <- 3
+quali.sup <- as.data.frame(res.PCA$quali.sup$coord[apply(abs(res.PCA$quali.sup$v.test[,c(1,2)]), 1, max) >= umbral,])
+quali.sup$name <- rownames(res.PCA$quali.sup$cos2)[apply(abs(res.PCA$quali.sup$v.test[,c(1,2)]), 1, max) >= umbral]
+
+# Plot
+
+ggscatter(quali.sup, x = "Dim.1", y = "Dim.2", label = "name",
+          ylim = c(-2.5, 2.5), xlim = c(-2.5, 2.5),
+          ggtheme = theme_minimal()
+)+
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  geom_hline(yintercept = 0, linetype = "dashed")
+
+```
+
+```{r}
+
+res.PCA$quali.sup$v.test
+```
+
+```{r}
+res.PCA$quali.sup$coord
+```
+
+```{r}
+plot.PCA(res.PCA, axes = c(1,2),label =c('none'),choix = c("ind"))
+plot.PCA(res.PCA, axes = c(1,3),label =c('none'),choix = c("ind"))
+plot.PCA(res.PCA, axes = c(1,4),label =c('none'),choix = c("ind"))
+```
+
+ACP para individuos que mueren en el hospital
+
+```{r}
+m_hosp <- datos%>%
+  filter(hospdead=="yes")%>%
+  as.data.frame()
+
+m_hosp$hospdead <- as.factor(m_hosp$hospdead)
+m_hosp$death <- as.factor(m_hosp$death)
+
+nrow(m_hosp)
+```
+
+```{r}
+sapply(m_hosp[,-c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45)], outlier_count)
+
+```
+
+```{r}
+res<-PCA(m_hosp,quali.sup=c(2,3,4,5,7,13,19,20,21,24,40,41,43,44,45),quanti.sup=c(6,10,11,22,23,31,32,33,36,38,39),graph=FALSE)
+
+barplot(res$eig[,1]/sum(res$eig[,1]))
+
+cumsum(res$eig[,1]/sum(res$eig[,1]))
+
+```
+
+Se toman 4 ejes para el análisis.
+
+```{r}
+fviz_contrib(res, choice = "var", axes = 1)
+fviz_contrib(res, choice = "var", axes = 2)
+fviz_contrib(res, choice = "var", axes = 3)
+fviz_contrib(res, choice = "var", axes = 4)
+
+```
+
+Las variables que más contribuyen al primer eje son las relacionadas con las estimaciones de supervivencia y los soportes fisiológico y psicológico, por lo que separa a los individuos que se estima tienen una probabilidad más alta de sobrevivir de los que no, teniendo que estos últimos tienden a recibir una mayor cantidad de asistencia.
+
+Las variables que más contribuyen al segundo eje son aquellas relacionadas con los cargos hospitalarios y la edad, siendo que los individuos más jóvenes tienden a tener mayores cargos hospitalarios.
+
+Las variables que más contribuyen al tercer eje son varaibles relacionadas con características de salud como la frecuencia respiratoria o la temperatura corporal y las que más contribuyen al 4 eje son los días de coma y los cargos hospitalarios.
+
+```{r}
+umbral_cos2 <- 0.2
+
+# Filtrar las variables según su cos2
+variables_filtradas <- rownames(res$var$cos2)[apply(res$var$cos2[,c(1,2)], 1, sum) >= umbral_cos2]
+
+# Filtrar las variables según su cos2
+variables_filtradas2 <- rownames(res$quanti.sup$cos2)[apply(res$quanti$cos2[,c(1,2)], 1, sum) >= umbral_cos2]
+variables_filtradas<-c(variables_filtradas,variables_filtradas2)
+fviz_pca_var(res, axes=c(1,2), col.var="cos2",
+             select.var = list(name =variables_filtradas),
+             gradient.cols = c("darkred", 
+                               "darkorange", 
+                               "darkgreen"))
+```
+
+Se observa que las peronas que presentan índices de supervivencia más altos, suelen recibir menos soportes fisiológicos y psicológicos.
+
+```{r}
+variables_filtradas <- rownames(res$var$cos2)[apply(res$var$cos2[,c(2,3)], 1, sum) >= umbral_cos2]
+
+# Filtrar las variables según su cos2
+variables_filtradas2 <- rownames(res$quanti.sup$cos2)[apply(res$quanti$cos2[,c(2,3)], 1, sum) >= umbral_cos2]
+variables_filtradas<-c(variables_filtradas,variables_filtradas2)
+fviz_pca_var(res, axes=c(2,3), col.var="cos2",
+             select.var = list(name =variables_filtradas),
+             gradient.cols = c("darkred", 
+                               "darkorange", 
+                               "darkgreen"))
+```
+
+```{r}
+variables_filtradas <- rownames(res$var$cos2)[apply(res$var$cos2[,c(3,4)], 1, sum) >= umbral_cos2]
+
+
+# Filtrar las variables según su cos2
+variables_filtradas2 <- rownames(res$quanti.sup$cos2)[apply(res$quanti$cos2[,c(3,4)], 1, sum) >= umbral_cos2]
+variables_filtradas<-c(variables_filtradas,variables_filtradas2)
+fviz_pca_var(res, axes=c(3,4), col.var="cos2",
+             select.var = list(name =variables_filtradas),
+             gradient.cols = c("darkred", 
+                               "darkorange", 
+                               "darkgreen"))
+```
+
+```{r}
+variables_filtradas <- rownames(res$var$cos2)[apply(res$var$cos2[,c(2,4)], 1, sum) >= umbral_cos2]
+
+# Filtrar las variables según su cos2
+variables_filtradas2 <- rownames(res$quanti.sup$cos2)[apply(res$quanti$cos2[,c(2,4)], 1, sum) >= umbral_cos2]
+variables_filtradas<-c(variables_filtradas,variables_filtradas2)
+fviz_pca_var(res, axes=c(2,4), col.var="cos2",
+             select.var = list(name =variables_filtradas),
+             gradient.cols = c("darkred", 
+                               "darkorange", 
+                               "darkgreen"))
+```
+
+```{r}
+res$quali.sup$v.test
+```
+
+### 
